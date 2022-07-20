@@ -7,3 +7,7 @@ This repo contains my work and projects from the MLOPs-zoomcamp
 
 ## Module 5
 Model monitoring
+
+## Module 6
+Best practices
+Writing tests

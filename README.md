@@ -1,5 +1,9 @@
 # MLOPszoomcamp
 This repo contains my work and projects from the MLOPs-zoomcamp
+
+## Module 1
+Introduction and set up
+
 ## Module 2
 Experiment tracking
 

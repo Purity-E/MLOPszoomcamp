@@ -4,13 +4,32 @@
 import sys
 import pickle
 import pandas as pd
-
+import os
 
 def read_data(filename):
 
-    df = pd.read_parquet(filename)
+    options = {
+    'client_kwargs': {
+        'endpoint_url': 'http://localhost:4566'
+    }
+}
+
+    df = pd.read_parquet(filename, storage_options=options)
+
+    #df = pd.read_parquet(filename)
     
     return df
+
+# function for saving data
+def save_data(df_result, output_file):
+    options = {
+    'client_kwargs': {
+        'endpoint_url': 'http://localhost:4566'
+    }
+}
+    df_result.to_parquet(output_file, engine='pyarrow', index=False, storage_options=options)
+
+
 
 def prepare_data(df, categorical):
 
@@ -23,12 +42,29 @@ def prepare_data(df, categorical):
 
     return df
 
+
+def get_input_path(year, month):
+    default_input_pattern = 'https://raw.githubusercontent.com/alexeygrigorev/datasets/master/nyc-tlc/fhv/fhv_tripdata_{year:04d}-{month:02d}.parquet'
+    input_pattern = os.getenv('INPUT_FILE_PATTERN', default_input_pattern)
+    return input_pattern.format(year=year, month=month)
+
+
+def get_output_path(year, month):
+    default_output_pattern = 's3://nyc-duration-prediction-alexey/taxi_type=fhv/year={year:04d}/month={month:02d}/predictions.parquet'
+    output_pattern = os.getenv('OUTPUT_FILE_PATTERN', default_output_pattern)
+    print(f'out={output_pattern}')
+    return output_pattern.format(year=year, month=month)
+
+
+
 def main(year, month):
 
 
-    input_file = f'https://raw.githubusercontent.com/alexeygrigorev/datasets/master/nyc-tlc/fhv/fhv_tripdata_{year:04d}-{month:02d}.parquet'
+    #input_file = f'https://raw.githubusercontent.com/alexeygrigorev/datasets/master/nyc-tlc/fhv/fhv_tripdata_{year:04d}-{month:02d}.parquet'
     #output_file = f's3://nyc-duration-prediction-alexey/taxi_type=fhv/year={year:04d}/month={month:02d}/predictions.parquet'
-    output_file = f'/home/ubuntu/my_mlops_code/MLOPszoomcamp/Module_6/preds/predictions.parquet'
+    #output_file = f'/home/ubuntu/my_mlops_code/MLOPszoomcamp/Module_6/preds/predictions.parquet'
+    input_file = get_input_path(year, month)
+    output_file = get_output_path(year, month)
 
     with open('model.bin', 'rb') as f_in:
         dv, lr = pickle.load(f_in)
@@ -54,7 +90,9 @@ def main(year, month):
     df_result['ride_id'] = df['ride_id']
     df_result['predicted_duration'] = y_pred
 
-    df_result.to_parquet(output_file, engine='pyarrow', index=False)
+    # saving results to localstack
+    save_data(df_result, output_file)
+    #df_result.to_parquet(output_file, engine='pyarrow', index=False)
 
 
 if __name__ == '__main__':

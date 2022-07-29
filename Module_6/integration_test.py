@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 import batch
+import os
 
 # creating dataframe
 def dt(hour, minute, second=0):
@@ -34,3 +35,13 @@ df_input.to_parquet(
     index=False,
     storage_options=options
 )
+# saving data
+
+# running batch.py for January 2021
+os.system('python batch.py 2021 1')
+
+# reading output file
+output_file = batch.get_output_path(2021, 1)
+
+df_result = batch.read_data(output_file)
+print(df_result['predicted_duration'].sum())
